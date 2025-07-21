@@ -1,16 +1,19 @@
-# CharacterAI ChatGPT Wrapper
+# CharacterAI ChatGPT Wrapper v2.0
 
-A full-stack web application that provides a ChatGPT wrapper with AI character voices and voice dictation capabilities. Chat with your favorite fictional characters using both text and voice input/output.
+A full-stack web application that provides a ChatGPT wrapper with AI character voices and voice dictation capabilities. Chat with your favorite fictional characters using both text and voice input/output with realistic AI voices.
 
 ## 🌟 Features
 
 - **AI Character Voices**: Pre-configured fictional characters with unique personalities and voices
+- **Realistic Voice AI**: ElevenLabs integration for ultra-realistic character voices
 - **Voice Dictation**: Speak to characters using speech-to-text
 - **Text-to-Speech**: Characters respond with their unique voices
 - **Modern UI**: Beautiful, responsive design with smooth animations
 - **Real-time Chat**: Instant messaging with AI characters
 - **Character Selection**: Choose from multiple fictional characters
 - **Mobile Responsive**: Works perfectly on all devices
+- **Analytics**: Track usage and conversations
+- **Audio Processing**: FFmpeg integration for audio enhancement
 
 ## 🎭 Available Characters
 
@@ -20,6 +23,33 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - **Master Yoda**: The wise Jedi Master
 - **Hermione Granger**: The brilliant witch from Hogwarts
 
+## 🏗️ Architecture
+
+### **Frontend**
+- **React** - Modern UI framework
+- **Framer Motion** - Smooth animations
+- **Lucide React** - Beautiful icons
+- **Axios** - HTTP client
+- **Hosting**: Vercel
+
+### **Backend**
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **OpenAI GPT-4o** - Advanced AI chat
+- **ElevenLabs** - Realistic voice synthesis
+- **FFmpeg** - Audio processing
+- **Hosting**: Render/Fly.io
+
+### **Database & Storage**
+- **Supabase** - PostgreSQL database
+- **Supabase Storage** - File storage
+- **Analytics** - Usage tracking
+
+### **Audio Pipeline**
+- **Web Audio API** - Browser audio handling
+- **FFmpeg** - Audio processing and conversion
+- **ElevenLabs** - High-quality voice synthesis
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -27,6 +57,8 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - Node.js (v16 or higher)
 - npm or yarn
 - OpenAI API key
+- ElevenLabs API key (optional)
+- Supabase account (optional)
 
 ### Installation
 
@@ -38,7 +70,11 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 
 2. **Install dependencies**
    ```bash
-   npm run install-all
+   # Install backend dependencies
+   cd backend && npm install && cd ..
+   
+   # Install frontend dependencies
+   cd client && npm install && cd ..
    ```
 
 3. **Set up environment variables**
@@ -46,41 +82,64 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
    cp env.example .env
    ```
    
-   Edit `.env` and add your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-4. **Start the development server**
+   Edit `.env` and add your API keys:
    ```bash
-   npm run dev
+   # Required
+   OPENAI_API_KEY=your_openai_api_key_here
+   
+   # Optional but recommended
+   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-5. **Open your browser**
+4. **Set up Supabase (Optional)**
+   - Follow the [Supabase Setup Guide](SUPABASE_SETUP.md)
+   - This enables analytics and conversation storage
+
+5. **Start the development server**
+   ```bash
+   # Start backend
+   cd backend && npm run dev
+   
+   # In another terminal, start frontend
+   cd client && npm start
+   ```
+
+6. **Open your browser**
    Navigate to `http://localhost:3000`
 
 ## 🛠️ Technology Stack
 
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **OpenAI API** - AI chat and voice services
-- **Socket.io** - Real-time communication
-- **Multer** - File upload handling
+### **Chat API**
+- **OpenAI GPT-4o** - Latest AI model for intelligent conversations
 
-### Frontend
-- **React** - UI framework
-- **Framer Motion** - Animations
-- **Lucide React** - Icons
-- **Axios** - HTTP client
-- **CSS3** - Styling with modern features
+### **Voice AI**
+- **ElevenLabs** - Ultra-realistic voice synthesis
+- **OpenAI TTS** - Fallback voice option
+- **PlayHT** - Alternative voice provider (configurable)
+
+### **Audio Pipeline**
+- **FFmpeg** - Professional audio processing
+- **Web Audio API** - Browser audio handling
+- **MediaRecorder API** - Voice recording
+
+### **Hosting**
+- **Vercel** - Frontend hosting
+- **Render/Fly.io** - Backend API hosting
+
+### **Database (Optional)**
+- **Supabase** - PostgreSQL database
+- **Supabase Storage** - File storage
+- **Analytics** - Usage tracking
 
 ## 📁 Project Structure
 
 ```
 characterai-chatgpt-wrapper/
-├── server/
-│   └── index.js              # Express server with API routes
+├── backend/
+│   ├── index.js              # Express server with enhanced features
+│   └── package.json          # Backend dependencies
 ├── client/
 │   ├── public/
 │   │   ├── index.html        # Main HTML file
@@ -90,10 +149,14 @@ characterai-chatgpt-wrapper/
 │   │   ├── App.css          # Component styles
 │   │   ├── index.js         # React entry point
 │   │   └── index.css        # Global styles
-│   └── package.json         # Client dependencies
-├── package.json             # Server dependencies
+│   └── package.json         # Frontend dependencies
+├── package.json             # Root dependencies
 ├── env.example             # Environment variables template
-└── README.md               # Project documentation
+├── vercel.json             # Vercel deployment config
+├── README.md               # Project documentation
+├── SETUP.md                # Quick start guide
+├── DEPLOYMENT.md           # Deployment instructions
+└── SUPABASE_SETUP.md       # Supabase setup guide
 ```
 
 ## 🔧 API Endpoints
@@ -103,19 +166,29 @@ characterai-chatgpt-wrapper/
 
 ### Chat
 - `POST /api/chat` - Send message to AI character
-  - Body: `{ message: string, characterId: string }`
+  - Body: `{ message: string, characterId: string, sessionId: string }`
 
 ### Voice
 - `POST /api/speech-to-text` - Convert audio to text
   - Body: FormData with audio file
-- `POST /api/text-to-speech` - Convert text to speech
+- `POST /api/text-to-speech/elevenlabs` - ElevenLabs TTS
   - Body: `{ text: string, characterId: string }`
+- `POST /api/text-to-speech/openai` - OpenAI TTS (fallback)
+  - Body: `{ text: string, characterId: string }`
+
+### Audio Processing
+- `POST /api/audio/process` - Process audio with FFmpeg
+  - Body: FormData with audio file
+
+### Analytics
+- `GET /api/analytics` - Get usage analytics
+- `GET /api/health` - Health check
 
 ## 🎨 Customization
 
 ### Adding New Characters
 
-1. **Edit `server/index.js`**
+1. **Edit `backend/index.js`**
    Add a new character to the `characters` object:
 
    ```javascript
@@ -125,70 +198,110 @@ characterai-chatgpt-wrapper/
        name: "Character Name",
        description: "Character description",
        personality: "Character personality traits",
-       voice: "alloy", // OpenAI voice: alloy, echo, fable, onyx, nova, shimmer
+       openaiVoice: "alloy", // OpenAI voice
+       elevenLabsVoiceId: "your_elevenlabs_voice_id",
        systemPrompt: "You are [character name]. [detailed personality and behavior instructions]"
      }
    };
    ```
 
 2. **Voice Options**
-   - `alloy` - Balanced, natural voice
-   - `echo` - Deep, authoritative voice
-   - `fable` - Warm, friendly voice
-   - `onyx` - Serious, professional voice
-   - `nova` - Bright, energetic voice
-   - `shimmer` - Soft, gentle voice
+   - **ElevenLabs**: Ultra-realistic voices (recommended)
+   - **OpenAI**: Standard voices (fallback)
+   - **PlayHT**: Alternative voice provider
 
-### Styling
+### Voice Configuration
 
-The app uses CSS custom properties and modern styling. Main styles are in:
-- `client/src/index.css` - Global styles
-- `client/src/App.css` - Component-specific styles
+#### ElevenLabs Setup
+1. Get API key from [ElevenLabs](https://elevenlabs.io)
+2. Add to environment variables
+3. Configure voice IDs for each character
+
+#### OpenAI Voice Options
+- `alloy` - Balanced, natural voice
+- `echo` - Deep, authoritative voice
+- `fable` - Warm, friendly voice
+- `onyx` - Serious, professional voice
+- `nova` - Bright, energetic voice
+- `shimmer` - Soft, gentle voice
 
 ## 🚀 Deployment
 
-### Option 1: Vercel (Recommended)
+### Frontend (Vercel)
 
-1. **Install Vercel CLI**
+1. **Deploy to Vercel**
    ```bash
-   npm i -g vercel
-   ```
-
-2. **Deploy**
-   ```bash
+   npm install -g vercel
    vercel
    ```
 
-### Option 2: Heroku
-
-1. **Create Heroku app**
-   ```bash
-   heroku create your-app-name
-   ```
-
 2. **Set environment variables**
-   ```bash
-   heroku config:set OPENAI_API_KEY=your_api_key
-   ```
+   - `REACT_APP_API_URL`: Your backend URL
 
-3. **Deploy**
-   ```bash
-   git push heroku main
-   ```
+### Backend (Render/Fly.io)
 
-### Option 3: Railway
+#### Option 1: Render
+1. Go to [Render.com](https://render.com/)
+2. Create new Web Service
+3. Connect your GitHub repository
+4. Set environment variables
+5. Deploy
 
-1. **Connect your GitHub repository**
-2. **Set environment variables in Railway dashboard**
-3. **Deploy automatically**
+#### Option 2: Fly.io
+1. Install Fly CLI: `npm install -g @flyio/fly`
+2. Create app: `fly launch`
+3. Set secrets: `fly secrets set OPENAI_API_KEY=your_key`
+4. Deploy: `fly deploy`
 
-## 🔒 Environment Variables
+### Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | Your OpenAI API key | Yes |
-| `PORT` | Server port (default: 5000) | No |
-| `NODE_ENV` | Environment (development/production) | No |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key | No |
+| `SUPABASE_URL` | Supabase project URL | No |
+| `SUPABASE_ANON_KEY` | Supabase anon key | No |
+| `FRONTEND_URL` | Frontend URL for CORS | No |
+| `NODE_ENV` | Environment (production) | No |
+
+## 📊 Analytics & Monitoring
+
+### Supabase Analytics
+- Track user interactions
+- Monitor character usage
+- Store conversation history
+- Performance metrics
+
+### Built-in Monitoring
+- Request rate limiting
+- Error tracking
+- Health checks
+- Performance monitoring
+
+## 🔒 Security Features
+
+- **Rate Limiting**: Prevent abuse
+- **CORS Protection**: Secure cross-origin requests
+- **Input Validation**: Sanitize user inputs
+- **Environment Variables**: Secure API keys
+- **HTTPS Required**: Secure voice features
+
+## 💰 Cost Optimization
+
+### OpenAI API
+- Monitor usage in OpenAI dashboard
+- Set up billing alerts
+- Use GPT-4o-mini for cost efficiency
+
+### ElevenLabs
+- Free tier available (10,000 characters/month)
+- Monitor usage in ElevenLabs dashboard
+- Optimize voice settings
+
+### Hosting
+- **Vercel**: Free tier available
+- **Render**: Free tier available
+- **Supabase**: Free tier available
 
 ## 🤝 Contributing
 
@@ -204,7 +317,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- OpenAI for providing the GPT and voice APIs
+- OpenAI for GPT-4o and TTS APIs
+- ElevenLabs for realistic voice synthesis
+- Supabase for database and storage
 - The React and Node.js communities
 - All the fictional characters that inspired this project
 
@@ -219,30 +334,41 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 2. **Voice recording not working**
    - Ensure your browser supports MediaRecorder API
    - Check microphone permissions
-   - Try using HTTPS (required for media access)
+   - Use HTTPS (required for media access)
 
-3. **Build errors**
-   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+3. **ElevenLabs voice not working**
+   - Check your ElevenLabs API key
+   - Verify voice IDs are correct
+   - Check your ElevenLabs usage limits
+
+4. **Supabase connection issues**
+   - Verify your Supabase credentials
+   - Check your database tables are created
+   - Ensure RLS policies are configured
+
+5. **Build errors**
+   - Clear node_modules and reinstall
    - Check Node.js version compatibility
-
-4. **CORS errors**
-   - Ensure the server is running on the correct port
-   - Check that the client proxy is configured correctly
+   - Verify all dependencies are installed
 
 ### Support
 
 If you encounter any issues, please:
 1. Check the troubleshooting section above
-2. Search existing issues on GitHub
-3. Create a new issue with detailed information
+2. Review the setup guides
+3. Search existing issues on GitHub
+4. Create a new issue with detailed information
 
-## 📊 Performance
+## 📈 Performance
 
 - **Frontend**: Optimized React components with lazy loading
 - **Backend**: Efficient API design with proper error handling
 - **Voice**: Stream processing for real-time audio conversion
+- **Database**: Indexed queries for fast performance
 - **UI**: Smooth 60fps animations with hardware acceleration
 
 ---
 
 **Made with ❤️ for AI enthusiasts and character lovers everywhere!**
+
+**Upgraded to v2.0 with realistic voices, analytics, and enhanced features! 🎤✨**

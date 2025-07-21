@@ -11,7 +11,9 @@ import {
   Bot,
   Settings,
   MessageCircle,
-  Users
+  Users,
+  Zap,
+  Database
 } from 'lucide-react';
 import './App.css';
 
@@ -27,11 +29,19 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showCharacterSelect, setShowCharacterSelect] = useState(true);
+  const [sessionId, setSessionId] = useState(null);
+  const [voiceProvider, setVoiceProvider] = useState('elevenlabs'); // 'elevenlabs' or 'openai'
+  const [analytics, setAnalytics] = useState(null);
   
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioRef = useRef(null);
+
+  // Generate session ID on component mount
+  useEffect(() => {
+    setSessionId(crypto.randomUUID());
+  }, []);
 
   // Fetch characters on component mount
   useEffect(() => {
@@ -79,7 +89,8 @@ function App() {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/chat`, {
         message: message,
-        characterId: selectedCharacter
+        characterId: selectedCharacter,
+        sessionId: sessionId
       });
 
       const aiMessage = {
@@ -168,7 +179,11 @@ function App() {
 
   const playTextToSpeech = async (text, characterId) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/text-to-speech`, {
+      const endpoint = voiceProvider === 'elevenlabs' 
+        ? '/api/text-to-speech/elevenlabs' 
+        : '/api/text-to-speech/openai';
+
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
         text: text,
         characterId: characterId
       }, {
@@ -190,6 +205,11 @@ function App() {
       }
     } catch (error) {
       console.error('Error playing text-to-speech:', error);
+      // Fallback to OpenAI if ElevenLabs fails
+      if (voiceProvider === 'elevenlabs') {
+        setVoiceProvider('openai');
+        playTextToSpeech(text, characterId);
+      }
     }
   };
 
@@ -197,10 +217,24 @@ function App() {
     setVoiceEnabled(!voiceEnabled);
   };
 
+  const toggleVoiceProvider = () => {
+    setVoiceProvider(voiceProvider === 'elevenlabs' ? 'openai' : 'elevenlabs');
+  };
+
   const resetChat = () => {
     setMessages([]);
     setShowCharacterSelect(true);
     setSelectedCharacter(null);
+    setSessionId(crypto.randomUUID());
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/analytics`);
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
   };
 
   return (
@@ -216,9 +250,16 @@ function App() {
         >
           <h1 className="title">
             <MessageCircle size={32} />
-            CharacterAI ChatGPT Wrapper
+            CharacterAI ChatGPT Wrapper v2.0
           </h1>
           <div className="header-controls">
+            <button 
+              className="btn btn-secondary"
+              onClick={toggleVoiceProvider}
+              title={`Switch to ${voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'} voice`}
+            >
+              {voiceProvider === 'elevenlabs' ? <Zap size={20} /> : <Database size={20} />}
+            </button>
             <button 
               className="btn btn-secondary"
               onClick={toggleVoice}
@@ -248,6 +289,12 @@ function App() {
               exit={{ opacity: 0, scale: 0.9 }}
             >
               <h2>Choose Your Character</h2>
+              <div className="voice-provider-info">
+                <p>Voice Provider: <strong>{voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</strong></p>
+                <button className="btn btn-secondary" onClick={toggleVoiceProvider}>
+                  Switch to {voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'}
+                </button>
+              </div>
               <div className="character-grid">
                 {Object.entries(characters).map(([id, character]) => (
                   <motion.div
@@ -264,6 +311,9 @@ function App() {
                     <p>{character.description}</p>
                     <div className="character-personality">
                       <strong>Personality:</strong> {character.personality}
+                    </div>
+                    <div className="voice-info">
+                      <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : character.openaiVoice}</small>
                     </div>
                   </motion.div>
                 ))}
@@ -285,6 +335,7 @@ function App() {
                 <div>
                   <h3>{characters[selectedCharacter]?.name}</h3>
                   <p>{characters[selectedCharacter]?.description}</p>
+                  <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : characters[selectedCharacter]?.openaiVoice}</small>
                 </div>
               </div>
 
@@ -294,6 +345,7 @@ function App() {
                   <div className="welcome-message">
                     <h3>Welcome to {characters[selectedCharacter]?.name}!</h3>
                     <p>Start a conversation with your chosen character. You can type or use voice input.</p>
+                    <p><small>Voice Provider: {voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</small></p>
                   </div>
                 )}
                 
