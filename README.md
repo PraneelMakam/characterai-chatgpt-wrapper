@@ -5,7 +5,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 ## 🌟 Features
 
 - **AI Character Voices**: Pre-configured fictional characters with unique personalities and voices
-- **Realistic Voice AI**: ElevenLabs integration for ultra-realistic character voices
+- **Realistic Voice AI**: PlayHT integration for ultra-realistic character voices
 - **Voice Dictation**: Speak to characters using speech-to-text
 - **Text-to-Speech**: Characters respond with their unique voices
 - **Modern UI**: Beautiful, responsive design with smooth animations
@@ -36,7 +36,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
 - **OpenAI GPT-4o** - Advanced AI chat
-- **ElevenLabs** - Realistic voice synthesis
+- **PlayHT** - Realistic voice synthesis
 - **FFmpeg** - Audio processing
 - **Hosting**: Render/Fly.io
 
@@ -48,7 +48,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 ### **Audio Pipeline**
 - **Web Audio API** - Browser audio handling
 - **FFmpeg** - Audio processing and conversion
-- **ElevenLabs** - High-quality voice synthesis
+- **PlayHT** - High-quality voice synthesis
 
 ## 🚀 Quick Start
 
@@ -57,7 +57,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - Node.js (v16 or higher)
 - npm or yarn
 - OpenAI API key
-- ElevenLabs API key (optional)
+- PlayHT API key (optional)
 - Supabase account (optional)
 
 ### Installation
@@ -88,7 +88,8 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
    OPENAI_API_KEY=your_openai_api_key_here
    
    # Optional but recommended
-   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   PLAYHT_API_KEY=your_playht_api_key_here
+   PLAYHT_USER_ID=your_playht_user_id_here
    SUPABASE_URL=your_supabase_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
@@ -115,9 +116,9 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - **OpenAI GPT-4o** - Latest AI model for intelligent conversations
 
 ### **Voice AI**
-- **ElevenLabs** - Ultra-realistic voice synthesis
+- **PlayHT** - Ultra-realistic voice synthesis
 - **OpenAI TTS** - Fallback voice option
-- **PlayHT** - Alternative voice provider (configurable)
+- **Character Voices** - Specialized character voice models
 
 ### **Audio Pipeline**
 - **FFmpeg** - Professional audio processing
@@ -171,7 +172,7 @@ characterai-chatgpt-wrapper/
 ### Voice
 - `POST /api/speech-to-text` - Convert audio to text
   - Body: FormData with audio file
-- `POST /api/text-to-speech/elevenlabs` - ElevenLabs TTS
+- `POST /api/text-to-speech/playht` - PlayHT TTS
   - Body: `{ text: string, characterId: string }`
 - `POST /api/text-to-speech/openai` - OpenAI TTS (fallback)
   - Body: `{ text: string, characterId: string }`
@@ -199,21 +200,21 @@ characterai-chatgpt-wrapper/
        description: "Character description",
        personality: "Character personality traits",
        openaiVoice: "alloy", // OpenAI voice
-       elevenLabsVoiceId: "your_elevenlabs_voice_id",
+       playhtVoiceId: "your_playht_voice_id",
        systemPrompt: "You are [character name]. [detailed personality and behavior instructions]"
      }
    };
    ```
 
 2. **Voice Options**
-   - **ElevenLabs**: Ultra-realistic voices (recommended)
+   - **PlayHT**: Ultra-realistic voices (recommended)
    - **OpenAI**: Standard voices (fallback)
-   - **PlayHT**: Alternative voice provider
+   - **Character Voices**: Specialized character models
 
 ### Voice Configuration
 
-#### ElevenLabs Setup
-1. Get API key from [ElevenLabs](https://elevenlabs.io)
+#### PlayHT Setup
+1. Get API key from [PlayHT](https://play.ht)
 2. Add to environment variables
 3. Configure voice IDs for each character
 
@@ -258,7 +259,8 @@ characterai-chatgpt-wrapper/
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | Your OpenAI API key | Yes |
-| `ELEVENLABS_API_KEY` | ElevenLabs API key | No |
+| `PLAYHT_API_KEY` | PlayHT API key | No |
+| `PLAYHT_USER_ID` | PlayHT User ID | No |
 | `SUPABASE_URL` | Supabase project URL | No |
 | `SUPABASE_ANON_KEY` | Supabase anon key | No |
 | `FRONTEND_URL` | Frontend URL for CORS | No |
@@ -293,9 +295,9 @@ characterai-chatgpt-wrapper/
 - Set up billing alerts
 - Use GPT-4o-mini for cost efficiency
 
-### ElevenLabs
-- Free tier available (10,000 characters/month)
-- Monitor usage in ElevenLabs dashboard
+### PlayHT
+- Free tier available (1,000 characters/month)
+- Monitor usage in PlayHT dashboard
 - Optimize voice settings
 
 ### Hosting
@@ -318,7 +320,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - OpenAI for GPT-4o and TTS APIs
-- ElevenLabs for realistic voice synthesis
+- PlayHT for realistic voice synthesis
 - Supabase for database and storage
 - The React and Node.js communities
 - All the fictional characters that inspired this project
@@ -336,10 +338,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
    - Check microphone permissions
    - Use HTTPS (required for media access)
 
-3. **ElevenLabs voice not working**
-   - Check your ElevenLabs API key
+3. **PlayHT voice not working**
+   - Check your PlayHT API key and User ID
    - Verify voice IDs are correct
-   - Check your ElevenLabs usage limits
+   - Check your PlayHT usage limits
 
 4. **Supabase connection issues**
    - Verify your Supabase credentials

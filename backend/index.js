@@ -60,14 +60,14 @@ const upload = multer({
   }
 });
 
-// Enhanced character definitions with ElevenLabs voices
+// Enhanced character definitions with PlayHT voices
 const characters = {
   sherlock: {
     name: "Sherlock Holmes",
     description: "The brilliant detective from 221B Baker Street",
     personality: "Analytical, observant, and slightly arrogant. Loves solving mysteries and deducing facts from small details.",
     openaiVoice: "alloy",
-    elevenLabsVoiceId: process.env.ELEVENLABS_SHERLOCK_VOICE_ID || "21m00Tcm4TlvDq8ikWAM", // Default voice
+    playhtVoiceId: process.env.PLAYHT_SHERLOCK_VOICE_ID || "s3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/female-cs/manifest.json",
     systemPrompt: "You are Sherlock Holmes, the world's greatest detective. You are brilliant, observant, and slightly arrogant. You love solving mysteries and deducing facts from small details. You speak in a British accent and often use phrases like 'Elementary, my dear Watson' and 'The game is afoot!'"
   },
   gandalf: {
@@ -75,7 +75,7 @@ const characters = {
     description: "The wise wizard from Middle-earth",
     personality: "Wise, mysterious, and powerful. Speaks in riddles and ancient wisdom.",
     openaiVoice: "echo",
-    elevenLabsVoiceId: process.env.ELEVENLABS_GANDALF_VOICE_ID || "EXAVITQu4vr4xnSDxMaL",
+    playhtVoiceId: process.env.PLAYHT_GANDALF_VOICE_ID || "s3://voice-cloning-zero-shot/8b6c58dd-5c23-4e8f-8c0c-5c3b3b3b3b3b/male-cs/manifest.json",
     systemPrompt: "You are Gandalf the Grey, a wise and powerful wizard from Middle-earth. You are mysterious, knowledgeable about ancient lore, and speak with wisdom and authority. You often use phrases like 'You shall not pass!' and 'All we have to decide is what to do with the time that is given us.'"
   },
   tony: {
@@ -83,7 +83,7 @@ const characters = {
     description: "The genius billionaire playboy philanthropist",
     personality: "Witty, brilliant, and confident. Loves technology and making jokes.",
     openaiVoice: "fable",
-    elevenLabsVoiceId: process.env.ELEVENLABS_TONY_VOICE_ID || "VR6AewLTigWG4xSOukaG",
+    playhtVoiceId: process.env.PLAYHT_TONY_VOICE_ID || "s3://voice-cloning-zero-shot/7c3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b/male-cs/manifest.json",
     systemPrompt: "You are Tony Stark, the genius billionaire playboy philanthropist. You are witty, brilliant, and confident. You love technology, making jokes, and being sarcastic. You often reference your suits, technology, and use phrases like 'I am Iron Man' and 'Sometimes you gotta run before you can walk.'"
   },
   yoda: {
@@ -91,7 +91,7 @@ const characters = {
     description: "The wise Jedi Master",
     personality: "Wise, patient, and speaks in a unique word order.",
     openaiVoice: "onyx",
-    elevenLabsVoiceId: process.env.ELEVENLABS_YODA_VOICE_ID || "pNInz6obpgDQGcFmaJgB",
+    playhtVoiceId: process.env.PLAYHT_YODA_VOICE_ID || "s3://voice-cloning-zero-shot/9d3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b/male-cs/manifest.json",
     systemPrompt: "You are Master Yoda, the wise Jedi Master. You are patient, wise, and speak in a unique word order (object-subject-verb). You often use phrases like 'Do or do not, there is no try' and 'Fear is the path to the dark side.'"
   },
   hermione: {
@@ -99,7 +99,7 @@ const characters = {
     description: "The brilliant witch from Hogwarts",
     personality: "Intelligent, logical, and slightly bossy. Loves books and following rules.",
     openaiVoice: "nova",
-    elevenLabsVoiceId: process.env.ELEVENLABS_HERMIONE_VOICE_ID || "AZnzlk1XvdvUeBnXmlld",
+    playhtVoiceId: process.env.PLAYHT_HERMIONE_VOICE_ID || "s3://voice-cloning-zero-shot/1e3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b/female-cs/manifest.json",
     systemPrompt: "You are Hermione Granger, the brilliant witch from Hogwarts. You are intelligent, logical, and slightly bossy. You love books, learning, and following rules. You often use phrases like 'It's leviosa, not leviosar!' and 'I've read about this in Hogwarts: A History.'"
   }
 };
@@ -129,7 +129,8 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
-    version: '2.0.0'
+    version: '2.0.0',
+    voice_provider: 'PlayHT'
   });
 });
 
@@ -232,8 +233,8 @@ app.post('/api/speech-to-text', upload.single('audio'), async (req, res) => {
   }
 });
 
-// ElevenLabs Text-to-Speech
-app.post('/api/text-to-speech/elevenlabs', async (req, res) => {
+// PlayHT Text-to-Speech
+app.post('/api/text-to-speech/playht', async (req, res) => {
   try {
     const { text, characterId } = req.body;
     
@@ -246,25 +247,27 @@ app.post('/api/text-to-speech/elevenlabs', async (req, res) => {
       return res.status(400).json({ error: 'Character not found' });
     }
 
-    if (!process.env.ELEVENLABS_API_KEY) {
-      return res.status(500).json({ error: 'ElevenLabs API key not configured' });
+    if (!process.env.PLAYHT_API_KEY || !process.env.PLAYHT_USER_ID) {
+      return res.status(500).json({ error: 'PlayHT API credentials not configured' });
     }
 
+    // PlayHT API call
     const response = await axios.post(
-      `https://api.elevenlabs.io/v1/text-to-speech/${character.elevenLabsVoiceId}`,
+      'https://play.ht/api/v2/tts',
       {
         text: text,
-        model_id: "eleven_monolingual_v1",
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5
-        }
+        voice: character.playhtVoiceId,
+        quality: "medium",
+        output_format: "mp3",
+        speed: 1,
+        sample_rate: 24000
       },
       {
         headers: {
           'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY
+          'Authorization': `Bearer ${process.env.PLAYHT_API_KEY}`,
+          'X-User-ID': process.env.PLAYHT_USER_ID
         },
         responseType: 'arraybuffer'
       }
@@ -291,7 +294,7 @@ app.post('/api/text-to-speech/elevenlabs', async (req, res) => {
     
     res.send(Buffer.from(response.data));
   } catch (error) {
-    console.error('ElevenLabs TTS error:', error);
+    console.error('PlayHT TTS error:', error);
     res.status(500).json({ error: 'Failed to generate speech' });
   }
 });
@@ -401,6 +404,6 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on port ${PORT}`);
   console.log(`📊 Supabase: ${process.env.SUPABASE_URL ? 'Connected' : 'Not configured'}`);
-  console.log(`🎤 ElevenLabs: ${process.env.ELEVENLABS_API_KEY ? 'Configured' : 'Not configured'}`);
+  console.log(`🎤 PlayHT: ${process.env.PLAYHT_API_KEY ? 'Configured' : 'Not configured'}`);
   console.log(`🤖 OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
 }); 

@@ -30,7 +30,7 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showCharacterSelect, setShowCharacterSelect] = useState(true);
   const [sessionId, setSessionId] = useState(null);
-  const [voiceProvider, setVoiceProvider] = useState('elevenlabs'); // 'elevenlabs' or 'openai'
+  const [voiceProvider, setVoiceProvider] = useState('playht'); // 'playht' or 'openai'
   const [analytics, setAnalytics] = useState(null);
   
   const messagesEndRef = useRef(null);
@@ -179,8 +179,8 @@ function App() {
 
   const playTextToSpeech = async (text, characterId) => {
     try {
-      const endpoint = voiceProvider === 'elevenlabs' 
-        ? '/api/text-to-speech/elevenlabs' 
+      const endpoint = voiceProvider === 'playht' 
+        ? '/api/text-to-speech/playht' 
         : '/api/text-to-speech/openai';
 
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
@@ -205,8 +205,8 @@ function App() {
       }
     } catch (error) {
       console.error('Error playing text-to-speech:', error);
-      // Fallback to OpenAI if ElevenLabs fails
-      if (voiceProvider === 'elevenlabs') {
+      // Fallback to OpenAI if PlayHT fails
+      if (voiceProvider === 'playht') {
         setVoiceProvider('openai');
         playTextToSpeech(text, characterId);
       }
@@ -218,7 +218,7 @@ function App() {
   };
 
   const toggleVoiceProvider = () => {
-    setVoiceProvider(voiceProvider === 'elevenlabs' ? 'openai' : 'elevenlabs');
+    setVoiceProvider(voiceProvider === 'playht' ? 'openai' : 'playht');
   };
 
   const resetChat = () => {
@@ -256,9 +256,9 @@ function App() {
             <button 
               className="btn btn-secondary"
               onClick={toggleVoiceProvider}
-              title={`Switch to ${voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'} voice`}
+              title={`Switch to ${voiceProvider === 'playht' ? 'OpenAI' : 'PlayHT'} voice`}
             >
-              {voiceProvider === 'elevenlabs' ? <Zap size={20} /> : <Database size={20} />}
+              {voiceProvider === 'playht' ? <Zap size={20} /> : <Database size={20} />}
             </button>
             <button 
               className="btn btn-secondary"
@@ -290,9 +290,9 @@ function App() {
             >
               <h2>Choose Your Character</h2>
               <div className="voice-provider-info">
-                <p>Voice Provider: <strong>{voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</strong></p>
+                <p>Voice Provider: <strong>{voiceProvider === 'playht' ? 'PlayHT (Realistic)' : 'OpenAI (Standard)'}</strong></p>
                 <button className="btn btn-secondary" onClick={toggleVoiceProvider}>
-                  Switch to {voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'}
+                  Switch to {voiceProvider === 'playht' ? 'OpenAI' : 'PlayHT'}
                 </button>
               </div>
               <div className="character-grid">
@@ -313,7 +313,7 @@ function App() {
                       <strong>Personality:</strong> {character.personality}
                     </div>
                     <div className="voice-info">
-                      <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : character.openaiVoice}</small>
+                      <small>Voice: {voiceProvider === 'playht' ? 'PlayHT' : character.openaiVoice}</small>
                     </div>
                   </motion.div>
                 ))}
@@ -335,7 +335,7 @@ function App() {
                 <div>
                   <h3>{characters[selectedCharacter]?.name}</h3>
                   <p>{characters[selectedCharacter]?.description}</p>
-                  <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : characters[selectedCharacter]?.openaiVoice}</small>
+                  <small>Voice: {voiceProvider === 'playht' ? 'PlayHT' : characters[selectedCharacter]?.openaiVoice}</small>
                 </div>
               </div>
 
@@ -345,7 +345,7 @@ function App() {
                   <div className="welcome-message">
                     <h3>Welcome to {characters[selectedCharacter]?.name}!</h3>
                     <p>Start a conversation with your chosen character. You can type or use voice input.</p>
-                    <p><small>Voice Provider: {voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</small></p>
+                    <p><small>Voice Provider: {voiceProvider === 'playht' ? 'PlayHT (Realistic)' : 'OpenAI (Standard)'}</small></p>
                   </div>
                 )}
                 
