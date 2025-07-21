@@ -8,7 +8,7 @@
     "dev": "nodemon index.js",
     "build": "echo 'No build step required'"
   },
-  "keywords": ["chatgpt", "ai", "voice", "characters", "chat", "elevenlabs"],
+  "keywords": ["chatgpt", "ai", "voice", "characters", "chat", "elevenlabs", "playht"],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {

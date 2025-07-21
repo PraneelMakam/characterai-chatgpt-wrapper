@@ -13,7 +13,8 @@ import {
   MessageCircle,
   Users,
   Zap,
-  Database
+  Database,
+  Sparkles
 } from 'lucide-react';
 import './App.css';
 
@@ -30,8 +31,13 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showCharacterSelect, setShowCharacterSelect] = useState(true);
   const [sessionId, setSessionId] = useState(null);
-  const [voiceProvider, setVoiceProvider] = useState('elevenlabs'); // 'elevenlabs' or 'openai'
+  const [voiceProvider, setVoiceProvider] = useState('elevenlabs'); // 'elevenlabs', 'playht', or 'openai'
   const [analytics, setAnalytics] = useState(null);
+  const [availableProviders, setAvailableProviders] = useState({
+    elevenlabs: false,
+    playht: false,
+    openai: true
+  });
   
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -43,9 +49,10 @@ function App() {
     setSessionId(crypto.randomUUID());
   }, []);
 
-  // Fetch characters on component mount
+  // Fetch characters and check available providers on component mount
   useEffect(() => {
     fetchCharacters();
+    checkAvailableProviders();
   }, []);
 
   // Auto-scroll to bottom when new messages arrive
@@ -59,6 +66,24 @@ function App() {
       setCharacters(response.data);
     } catch (error) {
       console.error('Error fetching characters:', error);
+    }
+  };
+
+  const checkAvailableProviders = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/health`);
+      setAvailableProviders(response.data.voice_providers);
+      
+      // Set default provider based on availability
+      if (response.data.voice_providers.elevenlabs) {
+        setVoiceProvider('elevenlabs');
+      } else if (response.data.voice_providers.playht) {
+        setVoiceProvider('playht');
+      } else {
+        setVoiceProvider('openai');
+      }
+    } catch (error) {
+      console.error('Error checking providers:', error);
     }
   };
 
@@ -179,9 +204,7 @@ function App() {
 
   const playTextToSpeech = async (text, characterId) => {
     try {
-      const endpoint = voiceProvider === 'elevenlabs' 
-        ? '/api/text-to-speech/elevenlabs' 
-        : '/api/text-to-speech/openai';
+      const endpoint = `/api/text-to-speech/${voiceProvider}`;
 
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
         text: text,
@@ -205,8 +228,14 @@ function App() {
       }
     } catch (error) {
       console.error('Error playing text-to-speech:', error);
-      // Fallback to OpenAI if ElevenLabs fails
-      if (voiceProvider === 'elevenlabs') {
+      // Try fallback providers
+      if (voiceProvider === 'elevenlabs' && availableProviders.playht) {
+        setVoiceProvider('playht');
+        playTextToSpeech(text, characterId);
+      } else if (voiceProvider === 'playht' && availableProviders.elevenlabs) {
+        setVoiceProvider('elevenlabs');
+        playTextToSpeech(text, characterId);
+      } else if (availableProviders.openai) {
         setVoiceProvider('openai');
         playTextToSpeech(text, characterId);
       }
@@ -217,8 +246,39 @@ function App() {
     setVoiceEnabled(!voiceEnabled);
   };
 
-  const toggleVoiceProvider = () => {
-    setVoiceProvider(voiceProvider === 'elevenlabs' ? 'openai' : 'elevenlabs');
+  const cycleVoiceProvider = () => {
+    const providers = ['elevenlabs', 'playht', 'openai'];
+    const currentIndex = providers.indexOf(voiceProvider);
+    const nextIndex = (currentIndex + 1) % providers.length;
+    const nextProvider = providers[nextIndex];
+    
+    // Find next available provider
+    let foundProvider = false;
+    for (let i = 0; i < providers.length; i++) {
+      const provider = providers[(nextIndex + i) % providers.length];
+      if (availableProviders[provider]) {
+        setVoiceProvider(provider);
+        foundProvider = true;
+        break;
+      }
+    }
+    
+    if (!foundProvider) {
+      setVoiceProvider('openai'); // Always fallback to OpenAI
+    }
+  };
+
+  const getVoiceProviderInfo = () => {
+    switch (voiceProvider) {
+      case 'elevenlabs':
+        return { name: 'ElevenLabs', icon: <Zap size={20} />, description: 'Ultra-Realistic' };
+      case 'playht':
+        return { name: 'PlayHT', icon: <Sparkles size={20} />, description: 'Character Voices' };
+      case 'openai':
+        return { name: 'OpenAI', icon: <Database size={20} />, description: 'Standard' };
+      default:
+        return { name: 'OpenAI', icon: <Database size={20} />, description: 'Standard' };
+    }
   };
 
   const resetChat = () => {
@@ -236,6 +296,8 @@ function App() {
       console.error('Error fetching analytics:', error);
     }
   };
+
+  const voiceProviderInfo = getVoiceProviderInfo();
 
   return (
     <div className="app">
@@ -255,10 +317,10 @@ function App() {
           <div className="header-controls">
             <button 
               className="btn btn-secondary"
-              onClick={toggleVoiceProvider}
-              title={`Switch to ${voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'} voice`}
+              onClick={cycleVoiceProvider}
+              title={`Current: ${voiceProviderInfo.name} (${voiceProviderInfo.description}) - Click to cycle`}
             >
-              {voiceProvider === 'elevenlabs' ? <Zap size={20} /> : <Database size={20} />}
+              {voiceProviderInfo.icon}
             </button>
             <button 
               className="btn btn-secondary"
@@ -290,9 +352,20 @@ function App() {
             >
               <h2>Choose Your Character</h2>
               <div className="voice-provider-info">
-                <p>Voice Provider: <strong>{voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</strong></p>
-                <button className="btn btn-secondary" onClick={toggleVoiceProvider}>
-                  Switch to {voiceProvider === 'elevenlabs' ? 'OpenAI' : 'ElevenLabs'}
+                <p>Voice Provider: <strong>{voiceProviderInfo.name} ({voiceProviderInfo.description})</strong></p>
+                <div className="provider-status">
+                  <span className={`status ${availableProviders.elevenlabs ? 'available' : 'unavailable'}`}>
+                    ElevenLabs: {availableProviders.elevenlabs ? '✅' : '❌'}
+                  </span>
+                  <span className={`status ${availableProviders.playht ? 'available' : 'unavailable'}`}>
+                    PlayHT: {availableProviders.playht ? '✅' : '❌'}
+                  </span>
+                  <span className={`status ${availableProviders.openai ? 'available' : 'unavailable'}`}>
+                    OpenAI: {availableProviders.openai ? '✅' : '❌'}
+                  </span>
+                </div>
+                <button className="btn btn-secondary" onClick={cycleVoiceProvider}>
+                  Switch Voice Provider
                 </button>
               </div>
               <div className="character-grid">
@@ -313,7 +386,7 @@ function App() {
                       <strong>Personality:</strong> {character.personality}
                     </div>
                     <div className="voice-info">
-                      <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : character.openaiVoice}</small>
+                      <small>Voice: {voiceProviderInfo.name}</small>
                     </div>
                   </motion.div>
                 ))}
@@ -335,7 +408,7 @@ function App() {
                 <div>
                   <h3>{characters[selectedCharacter]?.name}</h3>
                   <p>{characters[selectedCharacter]?.description}</p>
-                  <small>Voice: {voiceProvider === 'elevenlabs' ? 'ElevenLabs' : characters[selectedCharacter]?.openaiVoice}</small>
+                  <small>Voice: {voiceProviderInfo.name} ({voiceProviderInfo.description})</small>
                 </div>
               </div>
 
@@ -345,7 +418,7 @@ function App() {
                   <div className="welcome-message">
                     <h3>Welcome to {characters[selectedCharacter]?.name}!</h3>
                     <p>Start a conversation with your chosen character. You can type or use voice input.</p>
-                    <p><small>Voice Provider: {voiceProvider === 'elevenlabs' ? 'ElevenLabs (Realistic)' : 'OpenAI (Standard)'}</small></p>
+                    <p><small>Voice Provider: {voiceProviderInfo.name} ({voiceProviderInfo.description})</small></p>
                   </div>
                 )}
                 

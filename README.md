@@ -1,11 +1,12 @@
 # CharacterAI ChatGPT Wrapper v2.0
 
-A full-stack web application that provides a ChatGPT wrapper with AI character voices and voice dictation capabilities. Chat with your favorite fictional characters using both text and voice input/output with realistic AI voices.
+A full-stack web application that provides a ChatGPT wrapper with AI character voices and voice dictation capabilities. Chat with your favorite fictional characters using both text and voice input/output with **dual voice providers** - ElevenLabs and PlayHT for maximum flexibility and quality.
 
 ## 🌟 Features
 
 - **AI Character Voices**: Pre-configured fictional characters with unique personalities and voices
-- **Realistic Voice AI**: ElevenLabs integration for ultra-realistic character voices
+- **Dual Voice Providers**: ElevenLabs AND PlayHT integration for ultra-realistic character voices
+- **Smart Voice Switching**: Automatic fallback and manual switching between voice providers
 - **Voice Dictation**: Speak to characters using speech-to-text
 - **Text-to-Speech**: Characters respond with their unique voices
 - **Modern UI**: Beautiful, responsive design with smooth animations
@@ -36,7 +37,8 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
 - **OpenAI GPT-4o** - Advanced AI chat
-- **ElevenLabs** - Realistic voice synthesis
+- **ElevenLabs** - Primary realistic voice synthesis
+- **PlayHT** - Alternative realistic voice synthesis
 - **FFmpeg** - Audio processing
 - **Hosting**: Render/Fly.io
 
@@ -49,6 +51,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - **Web Audio API** - Browser audio handling
 - **FFmpeg** - Audio processing and conversion
 - **ElevenLabs** - High-quality voice synthesis
+- **PlayHT** - Character-focused voice synthesis
 
 ## 🚀 Quick Start
 
@@ -58,6 +61,7 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 - npm or yarn
 - OpenAI API key
 - ElevenLabs API key (optional)
+- PlayHT API key (optional)
 - Supabase account (optional)
 
 ### Installation
@@ -87,8 +91,10 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
    # Required
    OPENAI_API_KEY=your_openai_api_key_here
    
-   # Optional but recommended
+   # Optional but recommended (choose one or both)
    ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   PLAYHT_API_KEY=your_playht_api_key_here
+   PLAYHT_USER_ID=your_playht_user_id_here
    SUPABASE_URL=your_supabase_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
@@ -114,10 +120,11 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 ### **Chat API**
 - **OpenAI GPT-4o** - Latest AI model for intelligent conversations
 
-### **Voice AI**
-- **ElevenLabs** - Ultra-realistic voice synthesis
+### **Voice AI (Dual Providers)**
+- **ElevenLabs** - Ultra-realistic voice synthesis (Primary)
+- **PlayHT** - Character-focused voice synthesis (Alternative)
 - **OpenAI TTS** - Fallback voice option
-- **Character Voices** - Specialized character voice models
+- **Smart Fallback** - Automatic switching between providers
 
 ### **Audio Pipeline**
 - **FFmpeg** - Professional audio processing
@@ -138,15 +145,15 @@ A full-stack web application that provides a ChatGPT wrapper with AI character v
 ```
 characterai-chatgpt-wrapper/
 ├── backend/
-│   ├── index.js              # Express server with enhanced features
+│   ├── index.js              # Express server with dual voice providers
 │   └── package.json          # Backend dependencies
 ├── client/
 │   ├── public/
 │   │   ├── index.html        # Main HTML file
 │   │   └── manifest.json     # PWA manifest
 │   ├── src/
-│   │   ├── App.js           # Main React component
-│   │   ├── App.css          # Component styles
+│   │   ├── App.js           # Main React component with voice switching
+│   │   ├── App.css          # Component styles with voice provider UI
 │   │   ├── index.js         # React entry point
 │   │   └── index.css        # Global styles
 │   └── package.json         # Frontend dependencies
@@ -168,10 +175,12 @@ characterai-chatgpt-wrapper/
 - `POST /api/chat` - Send message to AI character
   - Body: `{ message: string, characterId: string, sessionId: string }`
 
-### Voice
+### Voice (Multiple Providers)
 - `POST /api/speech-to-text` - Convert audio to text
   - Body: FormData with audio file
 - `POST /api/text-to-speech/elevenlabs` - ElevenLabs TTS
+  - Body: `{ text: string, characterId: string }`
+- `POST /api/text-to-speech/playht` - PlayHT TTS
   - Body: `{ text: string, characterId: string }`
 - `POST /api/text-to-speech/openai` - OpenAI TTS (fallback)
   - Body: `{ text: string, characterId: string }`
@@ -182,7 +191,7 @@ characterai-chatgpt-wrapper/
 
 ### Analytics
 - `GET /api/analytics` - Get usage analytics
-- `GET /api/health` - Health check
+- `GET /api/health` - Health check with provider status
 
 ## 🎨 Customization
 
@@ -200,6 +209,7 @@ characterai-chatgpt-wrapper/
        personality: "Character personality traits",
        openaiVoice: "alloy", // OpenAI voice
        elevenLabsVoiceId: "your_elevenlabs_voice_id",
+       playhtVoiceId: "your_playht_voice_id",
        systemPrompt: "You are [character name]. [detailed personality and behavior instructions]"
      }
    };
@@ -207,13 +217,19 @@ characterai-chatgpt-wrapper/
 
 2. **Voice Options**
    - **ElevenLabs**: Ultra-realistic voices (recommended)
+   - **PlayHT**: Character-focused voices (alternative)
    - **OpenAI**: Standard voices (fallback)
-   - **Character Voices**: Specialized character models
+   - **Smart Switching**: Automatic fallback between providers
 
 ### Voice Configuration
 
 #### ElevenLabs Setup
 1. Get API key from [ElevenLabs](https://elevenlabs.io)
+2. Add to environment variables
+3. Configure voice IDs for each character
+
+#### PlayHT Setup
+1. Get API key and User ID from [PlayHT](https://play.ht)
 2. Add to environment variables
 3. Configure voice IDs for each character
 
@@ -259,6 +275,8 @@ characterai-chatgpt-wrapper/
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | Your OpenAI API key | Yes |
 | `ELEVENLABS_API_KEY` | ElevenLabs API key | No |
+| `PLAYHT_API_KEY` | PlayHT API key | No |
+| `PLAYHT_USER_ID` | PlayHT User ID | No |
 | `SUPABASE_URL` | Supabase project URL | No |
 | `SUPABASE_ANON_KEY` | Supabase anon key | No |
 | `FRONTEND_URL` | Frontend URL for CORS | No |
@@ -277,6 +295,7 @@ characterai-chatgpt-wrapper/
 - Error tracking
 - Health checks
 - Performance monitoring
+- Voice provider status monitoring
 
 ## 🔒 Security Features
 
@@ -296,6 +315,11 @@ characterai-chatgpt-wrapper/
 ### ElevenLabs
 - Free tier available (10,000 characters/month)
 - Monitor usage in ElevenLabs dashboard
+- Optimize voice settings
+
+### PlayHT
+- Free tier available (1,000 characters/month)
+- Monitor usage in PlayHT dashboard
 - Optimize voice settings
 
 ### Hosting
@@ -319,6 +343,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - OpenAI for GPT-4o and TTS APIs
 - ElevenLabs for realistic voice synthesis
+- PlayHT for character-focused voice synthesis
 - Supabase for database and storage
 - The React and Node.js communities
 - All the fictional characters that inspired this project
@@ -336,10 +361,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
    - Check microphone permissions
    - Use HTTPS (required for media access)
 
-3. **ElevenLabs voice not working**
-   - Check your ElevenLabs API key
+3. **Voice providers not working**
+   - Check your API keys for ElevenLabs and PlayHT
    - Verify voice IDs are correct
-   - Check your ElevenLabs usage limits
+   - Check your usage limits
+   - The app will automatically fallback to available providers
 
 4. **Supabase connection issues**
    - Verify your Supabase credentials
@@ -366,9 +392,21 @@ If you encounter any issues, please:
 - **Voice**: Stream processing for real-time audio conversion
 - **Database**: Indexed queries for fast performance
 - **UI**: Smooth 60fps animations with hardware acceleration
+- **Voice Switching**: Intelligent fallback system
+
+## 🎤 Voice Provider Comparison
+
+| Feature | ElevenLabs | PlayHT | OpenAI |
+|---------|------------|--------|--------|
+| Voice Variety | 100+ voices | 800+ voices | 6 voices |
+| Character Voices | ✅ Good | ✅ Excellent | ❌ Generic |
+| Quality | High | High | Medium |
+| Free Tier | 10,000 chars | 1,000 chars | 500 chars |
+| Cost | Pay per character | Pay per character | Pay per character |
+| **Best For** | **General use** | **Character voices** | **Fallback** |
 
 ---
 
 **Made with ❤️ for AI enthusiasts and character lovers everywhere!**
 
-**Upgraded to v2.0 with realistic voices, analytics, and enhanced features! 🎤✨**
+**Upgraded to v2.0 with dual voice providers, smart switching, and enhanced features! 🎤✨**
